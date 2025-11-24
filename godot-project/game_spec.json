@@ -1,0 +1,42 @@
+{
+  "game": {
+    "name": "Asphalt Rush",
+    "type": "2D",
+    "genre": "racing",
+    "description": "A top-down arcade racing game where the player avoids obstacles to get the highest score."
+  },
+  "settings": {
+    "window": { "width": 800, "height": 600 },
+    "physics": { "gravity": 0 }
+  },
+  "player": {
+    "name": "Player",
+    "speed": 800,
+    "abilities": ["accelerate", "turn", "brake"]
+  },
+  "entities": {
+    "enemies": [],
+    "collectibles": [],
+    "obstacles": [
+      {
+        "name": "Cone",
+        "damage": 1,
+        "behavior": "stationary"
+      }
+    ]
+  },
+  "levels": [
+    {
+      "name": "Main Highway",
+      "background": "asphalt",
+      "obstacles": ["cone"]
+    }
+  ],
+  "logic": {
+    "winCondition": "reach_score_5000",
+    "loseCondition": "hit_obstacle",
+    "scoring": {
+      "pointsPerDistanceUnit": 1
+    }
+  }
+}

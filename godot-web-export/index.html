@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asphalt Rush - Preview</title>
+    <style>
+        body { margin: 0; background-color: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; color: white; }
+        canvas { background-color: #333; border: 2px solid #555; }
+        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: rgba(0,0,0,0.7); text-align: center; }
+        .ui-overlay h1 { font-size: 3em; margin-bottom: 10px; }
+        .ui-overlay p { font-size: 1.2em; margin-bottom: 20px; }
+        .ui-overlay button { font-size: 1.5em; padding:<think>The user wants me to continue the `index.html` file.
+I was in the middle of writing the HTML for the web preview.
+I need to complete the button styling, add the rest of the HTML structure for the different game states (start, game over), and then write the JavaScript logic for the canvas game.
+
+**Plan:**
+1.  Finish the CSS for the button.
+2.  Add the HTML for the score display.
+3.  Complete the HTML for the UI overlays (start screen, game over screen).
+4.  Write the JavaScript part.
+    *   Set up the canvas and context.
+    *   Define game state variables (`gameState`, `score`, etc.).
+    *   Create objects for the player and obstacles.
+    *   Implement the input handling (keyboard).
+    *   Create the main game loop (`update` and `draw` functions).
+    *   Implement simple physics (movement, collision).
+    *   Handle game state transitions (start -> playing -> game over).
+    *   Draw everything on the canvas (road lines, player, obstacles).
+    *   Add functions to show/hide UI overlays.
+5.  Close the `<script>` tag.
+6.  Close the `</body>` and `</html>` tags.
+7.  Finally, close the `<applaa-write>` tag.# ... continuing from above
+10px 20px; cursor: pointer; border: 2px solid #fff; background-color: #222; color: #fff; border-radius: 5px; }
+        .ui-overlay button:hover { background-color: #444; }
+        #score { position: absolute; top: 20px; left: 20px; font-size: 2em; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="score">Score: 0</div>
+
+    <!-- UI Screens -->
+    <div id="startScreen" class="ui-overlay">
+        <h1>Asphalt Rush</h1>
+        <p>Use W/A/S/D or Arrow Keys to drive.<br>Avoid the orange cones!</p>
+        <button id="startButton">Start Game</button>
+    </div>
+
+    <div id="gameOverScreen" class="ui-overlay hidden">
+        <h1>Game Over</h1>
+        <p id="finalScore">Final Score: 0</p>
+        <button id="restartButton">Try Again</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const startButton = document.getElementById('startButton');
+        const restartButton = document.getElementById('restartButton');
+        const scoreDisplay = document.getElementById('score');
+        const finalScoreDisplay = document.getElementById('finalScore');
+
+        let gameState = 'menu'; // 'menu', 'playing', 'gameOver'
+        let score = 0;
+        let roadOffset = 0;
+        const roadSpeed = 5;
+
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 100,
+            width: 30,
+            height: 50,
+            speed: 5,
+            dx: 0,
+            color: '#0095DD'
+        };
+
+        let obstacles = [];
+        const keys = {
+            ArrowUp: false, w: false,
+            ArrowDown: false, s: false,
+            ArrowLeft: false, a: false,
+            ArrowRight: false, d: false
+        };
+
+        function createObstacle() {
+            const size = 30;
+            obstacles.push({
+                x: Math.random() * (canvas.width - size),
+                y: -size,
+                width: size,
+                height: size,
+                color: '#FFA500'
+            });
+        }
+
+        function handleInput() {
+            player.dx = 0;
+            if (keys.ArrowLeft || keys.a) player.dx = -player.speed;
+            if (keys.ArrowRight || keys.d) player.dx = player.speed;
+        }
+
+        function update() {
+            if (gameState !== 'playing') return;
+
+            handleInput();
+
+            // Move player
+            player.x += player.dx;
+
+            // Keep player in bounds
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            // Move road lines
+            roadOffset = (roadOffset + roadSpeed) % 100;
+
+            // Move and manage obstacles
+            obstacles.forEach((obstacle, index) => {
+                obstacle.y += roadSpeed;
+
+                // Collision detection
+                if (
+                    player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y
+                ) {
+                    endGame();
+                }
+
+                // Remove off-screen obstacles
+                if (obstacle.y > canvas.height) {
+                    obstacles.splice(index, 1);
+                }
+            });
+            
+            // Update score
+            score++;
+            scoreDisplay.textContent = `Score: ${score}`;
+        }
+
+        function drawRoad() {
+            ctx.fillStyle = '#444'; // Road color
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 5;
+            ctx.setLineDash([20, 30]);
+
+            for (let i = 1; i < 4; i++) {
+                ctx.beginPath();
+                ctx.moveTo((canvas.width / 4) * i, -100 + roadOffset);
+                ctx.lineTo((canvas.width / 4) * i, canvas.height + 100);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                ctx.fillStyle = obstacle.color;
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawRoad();
+            drawPlayer();
+            drawObstacles();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            gameState = 'playing';
+            score = 0;
+            player.x = canvas.width / 2;
+            obstacles = [];
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            scoreDisplay.classList.remove('hidden');
+        }
+
+        function endGame() {
+            gameState = 'gameOver';
+            finalScoreDisplay.textContent = `Final Score: ${score}`;
+            gameOverScreen.classList.remove('hidden');
+            scoreDisplay.classList.add('hidden');
+        }
+
+        // Event Listeners
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+
+        window.addEventListener('keydown', (e) => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+        });
+
+        // Spawn obstacles periodically
+        setInterval(() => {
+            if (gameState === 'playing') {
+                createObstacle();
+            }
+        }, 1000);
+
+        // Initial call
+        gameLoop();
+    </script>
+</body>
+</html>
