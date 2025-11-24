@@ -9,29 +9,8 @@
         canvas { background-color: #333; border: 2px solid #555; }
         .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: rgba(0,0,0,0.7); text-align: center; }
         .ui-overlay h1 { font-size: 3em; margin-bottom: 10px; }
-        .ui-overlay p { font-size: 1.2em; margin-bottom: 20px; }
-        .ui-overlay button { font-size: 1.5em; padding:<think>The user wants me to continue the `index.html` file.
-I was in the middle of writing the HTML for the web preview.
-I need to complete the button styling, add the rest of the HTML structure for the different game states (start, game over), and then write the JavaScript logic for the canvas game.
-
-**Plan:**
-1.  Finish the CSS for the button.
-2.  Add the HTML for the score display.
-3.  Complete the HTML for the UI overlays (start screen, game over screen).
-4.  Write the JavaScript part.
-    *   Set up the canvas and context.
-    *   Define game state variables (`gameState`, `score`, etc.).
-    *   Create objects for the player and obstacles.
-    *   Implement the input handling (keyboard).
-    *   Create the main game loop (`update` and `draw` functions).
-    *   Implement simple physics (movement, collision).
-    *   Handle game state transitions (start -> playing -> game over).
-    *   Draw everything on the canvas (road lines, player, obstacles).
-    *   Add functions to show/hide UI overlays.
-5.  Close the `<script>` tag.
-6.  Close the `</body>` and `</html>` tags.
-7.  Finally, close the `<applaa-write>` tag.# ... continuing from above
-10px 20px; cursor: pointer; border: 2px solid #fff; background-color: #222; color: #fff; border-radius: 5px; }
+        .ui-overlay p { font-size: 1.2em; margin-bottom: 20px; line-height: 1.5; }
+        .ui-overlay button { font-size: 1.5em; padding: 10px 20px; cursor: pointer; border: 2px solid #fff; background-color: #222; color: #fff; border-radius: 5px; }
         .ui-overlay button:hover { background-color: #444; }
         #score { position: absolute; top: 20px; left: 20px; font-size: 2em; }
         .hidden { display: none; }
@@ -44,7 +23,7 @@ I need to complete the button styling, add the rest of the HTML structure for th
     <!-- UI Screens -->
     <div id="startScreen" class="ui-overlay">
         <h1>Asphalt Rush</h1>
-        <p>Use W/A/S/D or Arrow Keys to drive.<br>Avoid the orange cones!</p>
+        <p>Use W/A/S/D or Arrow Keys to drive.<br>Press Spacebar to jump over cones!<br>(Drifting is available in the full Godot game)</p>
         <button id="startButton">Start Game</button>
     </div>
 
@@ -77,7 +56,9 @@ I need to complete the button styling, add the rest of the HTML structure for th
             height: 50,
             speed: 5,
             dx: 0,
-            color: '#0095DD'
+            color: '#0095DD',
+            isJumping: false,
+            canJump: true
         };
 
         let obstacles = [];
@@ -85,7 +66,8 @@ I need to complete the button styling, add the rest of the HTML structure for th
             ArrowUp: false, w: false,
             ArrowDown: false, s: false,
             ArrowLeft: false, a: false,
-            ArrowRight: false, d: false
+            ArrowRight: false, d: false,
+            ' ': false
         };
 
         function createObstacle() {
@@ -98,11 +80,28 @@ I need to complete the button styling, add the rest of the HTML structure for th
                 color: '#FFA500'
             });
         }
+        
+        function jump() {
+            if (!player.canJump || player.isJumping) return;
+            player.isJumping = true;
+            player.canJump = false;
+            
+            // Jump duration
+            setTimeout(() => {
+                player.isJumping = false;
+            }, 500);
+
+            // Jump cooldown
+            setTimeout(() => {
+                player.canJump = true;
+            }, 1500);
+        }
 
         function handleInput() {
             player.dx = 0;
             if (keys.ArrowLeft || keys.a) player.dx = -player.speed;
             if (keys.ArrowRight || keys.d) player.dx = player.speed;
+            if (keys[' ']) jump();
         }
 
         function update() {
@@ -110,22 +109,17 @@ I need to complete the button styling, add the rest of the HTML structure for th
 
             handleInput();
 
-            // Move player
             player.x += player.dx;
-
-            // Keep player in bounds
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
 
-            // Move road lines
             roadOffset = (roadOffset + roadSpeed) % 100;
 
-            // Move and manage obstacles
             obstacles.forEach((obstacle, index) => {
                 obstacle.y += roadSpeed;
 
-                // Collision detection
-                if (
+                // Collision detection (only if not jumping)
+                if ( !player.isJumping &&
                     player.x < obstacle.x + obstacle.width &&
                     player.x + player.width > obstacle.x &&
                     player.y < obstacle.y + obstacle.height &&
@@ -134,25 +128,21 @@ I need to complete the button styling, add the rest of the HTML structure for th
                     endGame();
                 }
 
-                // Remove off-screen obstacles
                 if (obstacle.y > canvas.height) {
                     obstacles.splice(index, 1);
                 }
             });
             
-            // Update score
             score++;
             scoreDisplay.textContent = `Score: ${score}`;
         }
 
         function drawRoad() {
-            ctx.fillStyle = '#444'; // Road color
+            ctx.fillStyle = '#444';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
             ctx.strokeStyle = 'white';
             ctx.lineWidth = 5;
             ctx.setLineDash([20, 30]);
-
             for (let i = 1; i < 4; i++) {
                 ctx.beginPath();
                 ctx.moveTo((canvas.width / 4) * i, -100 + roadOffset);
@@ -163,8 +153,19 @@ I need to complete the button styling, add the rest of the HTML structure for th
         }
 
         function drawPlayer() {
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.save();
+            if (player.isJumping) {
+                // Visual effect for jump
+                const scale = 1.2;
+                ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+                ctx.scale(scale, scale);
+                ctx.fillStyle = '#50C8FF'; // Lighter color when jumping
+                ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+            } else {
+                ctx.fillStyle = player.color;
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+            }
+            ctx.restore();
         }
 
         function drawObstacles() {
@@ -191,6 +192,8 @@ I need to complete the button styling, add the rest of the HTML structure for th
             gameState = 'playing';
             score = 0;
             player.x = canvas.width / 2;
+            player.isJumping = false;
+            player.canJump = true;
             obstacles = [];
             startScreen.classList.add('hidden');
             gameOverScreen.classList.add('hidden');
@@ -204,25 +207,14 @@ I need to complete the button styling, add the rest of the HTML structure for th
             scoreDisplay.classList.add('hidden');
         }
 
-        // Event Listeners
         startButton.addEventListener('click', startGame);
         restartButton.addEventListener('click', startGame);
 
-        window.addEventListener('keydown', (e) => {
-            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
-        });
-        window.addEventListener('keyup', (e) => {
-            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
-        });
+        window.addEventListener('keydown', (e) => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; });
+        window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
 
-        // Spawn obstacles periodically
-        setInterval(() => {
-            if (gameState === 'playing') {
-                createObstacle();
-            }
-        }, 1000);
+        setInterval(() => { if (gameState === 'playing') createObstacle(); }, 1000);
 
-        // Initial call
         gameLoop();
     </script>
 </body>

@@ -27,9 +27,9 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -150.0
+offset_left = -200.0
 offset_top = -150.0
-offset_right = 150.0
+offset_right = 200.0
 offset_bottom = 150.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -47,10 +47,13 @@ horizontal_alignment = 1
 
 [node name="InstructionsLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-text = "Use W/A/S/D or Arrow Keys to drive.
-Avoid the obstacles!
-Reach 5000 points to win."
+text = "W/A/S/D or Arrows: Drive
+Spacebar: Jump (hops over obstacles)
+Shift: Slide / Drift (for sharp turns)
+
+Reach 5000 points to win!"
 horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="StartButton" type="Button" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
